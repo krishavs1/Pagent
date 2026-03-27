@@ -95,6 +95,7 @@ class MarketState:
     bid_depth_usd: float
     ask_depth_usd: float
     last_updated: datetime
+    yes_token_id: Optional[str] = None
 
 
 @dataclass(frozen=True, slots=True)

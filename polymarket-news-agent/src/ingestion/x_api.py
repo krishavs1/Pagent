@@ -37,6 +37,7 @@ class XApiSource(NewsSource):
         self,
         accounts: list[str],
         keywords: list[str],
+        source_name: str = "political_x",
         poll_seconds: int = 60,
         max_results_per_account: int = 5,
         bearer_token: Optional[str] = None,
@@ -51,7 +52,7 @@ class XApiSource(NewsSource):
             bearer_token: X API Bearer Token. Falls back to X_BEARER_TOKEN env var.
         """
 
-        super().__init__(source_name="x_api")
+        super().__init__(source_name=source_name)
         self.accounts = accounts
         self.keywords = keywords
         self.poll_seconds = poll_seconds

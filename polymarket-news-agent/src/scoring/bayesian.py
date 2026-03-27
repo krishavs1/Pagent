@@ -61,6 +61,11 @@ class BayesianEngine:
         """Set or override a prior/posterior anchor for a market."""
         self._posteriors[market_id] = self._clamp01(prior)
 
+    def seed_prior_if_missing(self, market_id: str, mid: float) -> None:
+        """Set prior from market-implied probability if no belief stored yet."""
+        if market_id not in self._posteriors:
+            self.set_prior(market_id, mid)
+
     def update_from_likelihoods(self, market_id: str, likelihood_yes: float, likelihood_no: float) -> float:
         """Update stored posterior for market from explicit likelihoods."""
         prior = self.get_prior(market_id)

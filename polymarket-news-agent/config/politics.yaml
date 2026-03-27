@@ -50,9 +50,9 @@ news_sources:
       poll_seconds: 60           # poll once per minute to control costs
       max_results_per_account: 5 # recent tweets per poll per account
   tier_4:
-    - name: "Pundit Roundup"
+    - name: "BBC UK Politics"
       kind: rss
-      url: "https://example.com/pundits/rss"
+      url: "https://feeds.bbci.co.uk/news/politics/rss.xml"
 
 official_sources:
   - name: "White House Presidential Actions"

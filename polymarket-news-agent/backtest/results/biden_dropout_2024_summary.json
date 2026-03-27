@@ -7,7 +7,11 @@
   "unrealized_pnl": 0.0,
   "settled_trades": 9,
   "win_rate": 0.4444444444444444,
-  "total_pnl_usd": 471.66828101493246,
+  "total_pnl_usd": 470.29367347026493,
   "avg_edge_at_entry": -0.3681206968088483,
-  "max_drawdown_usd": 198.5245201176225
+  "max_drawdown_usd": 198.66348728170485,
+  "execution_attempts": 9,
+  "fill_rate": 1.0,
+  "avg_slippage_bps": 379.6512129845458,
+  "fees_paid_usd": 0.5415320779791488
 }

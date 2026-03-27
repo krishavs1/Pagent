@@ -12,16 +12,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
-from src.execution.executor import ExecutionConfig, OrderExecutor
 from src.execution.strategy import StrategyConfig, TradingStrategy
 from src.risk.manager import RiskConfig, RiskManager
 from src.scoring.bayesian import BayesianEngine
 from src.scoring.classifier import ClassificationResult
 from src.scoring.edge import EdgeCalculator, EdgeConfig
 from src.scoring.likelihoods import likelihoods_from_classification
-from src.utils.config import load_config, load_yaml
+from src.utils.config import load_config
 from src.utils.logger import AgentLogger
-from src.utils.types import EdgeEstimate, MarketState, OrderSide, PortfolioState, Signal, SignalTier, SignalType, TradeDecision
+from src.utils.types import MarketState, OrderSide, PortfolioState, Signal, SignalTier, SignalType, TradeDecision
 
 
 @dataclass(slots=True)
@@ -118,6 +117,7 @@ class BacktestRunner:
                 "signals": data.get("signals", []),
                 "markets": data.get("markets", {}),
                 "outcomes": data.get("outcomes", {}),
+                "execution": data.get("execution", {}),
             }
         raise ValueError("Unsupported dataset format.")
 
@@ -142,7 +142,7 @@ class BacktestRunner:
         )
 
     @staticmethod
-    def _trade_pnl_usd(trade: TradeDecision, outcome_yes: float) -> float:
+    def _trade_pnl_usd(trade: TradeDecision, outcome_yes: float, fee_usd: float = 0.0) -> float:
         """
         Approximate settlement PnL in USD.
 
@@ -157,11 +157,112 @@ class BacktestRunner:
         if trade.side == OrderSide.BUY:
             shares_yes = n / p
             payout = shares_yes * y
-            return payout - n
+            return (payout - n) - fee_usd
         price_no = max(1e-6, 1.0 - p)
         shares_no = n / price_no
         payout = shares_no * (1.0 - y)
-        return payout - n
+        return (payout - n) - fee_usd
+
+    @staticmethod
+    def _parse_book_side(levels: Any) -> list[tuple[float, float]]:
+        """Normalize levels into [(price, shares)] sorted by price ascending."""
+        out: list[tuple[float, float]] = []
+        if not isinstance(levels, list):
+            return out
+        for lvl in levels:
+            if isinstance(lvl, dict):
+                p = float(lvl.get("price", 0.0))
+                s = float(lvl.get("size", 0.0))
+            elif isinstance(lvl, list) and len(lvl) >= 2:
+                p = float(lvl[0])
+                s = float(lvl[1])
+            else:
+                continue
+            if p > 0 and s > 0:
+                out.append((p, s))
+        out.sort(key=lambda x: x[0])
+        return out
+
+    def _simulate_fill(
+        self,
+        decision: TradeDecision,
+        market: MarketState,
+        snapshot: dict[str, Any],
+        *,
+        taker_fee_bps: float,
+        latency_bps: float,
+    ) -> tuple[Optional[TradeDecision], Dict[str, float]]:
+        """
+        Simulate fill from historical book ladders.
+
+        Returns (filled_decision_or_none, metrics) where metrics has:
+        - fee_usd
+        - slippage_bps
+        - fill_notional_usd
+        """
+        ob = snapshot.get("orderbook", {}) if isinstance(snapshot, dict) else {}
+        asks = self._parse_book_side(ob.get("asks", []))
+        bids = self._parse_book_side(ob.get("bids", []))
+        target = float(decision.size_usd)
+        if target <= 0:
+            return None, {"fee_usd": 0.0, "slippage_bps": 0.0, "fill_notional_usd": 0.0}
+
+        remaining = target
+        notional = 0.0
+        shares = 0.0
+        if decision.side == OrderSide.BUY:
+            levels = asks
+            for p, s in levels:
+                cap = p * s
+                take = min(remaining, cap)
+                if take <= 0:
+                    continue
+                notional += take
+                shares += take / p
+                remaining -= take
+                if remaining <= 1e-9:
+                    break
+        else:
+            levels = sorted(bids, key=lambda x: x[0], reverse=True)
+            for p, s in levels:
+                cap = p * s  # max proceeds from this level
+                take = min(remaining, cap)
+                if take <= 0:
+                    continue
+                notional += take
+                shares += take / p
+                remaining -= take
+                if remaining <= 1e-9:
+                    break
+
+        if notional <= 0.0 or shares <= 0.0:
+            return None, {"fee_usd": 0.0, "slippage_bps": 0.0, "fill_notional_usd": 0.0}
+
+        vwap = notional / shares
+        # Latency makes fill slightly worse than observed ladder.
+        lat_mult = 1.0 + (latency_bps / 10_000.0)
+        if decision.side == OrderSide.BUY:
+            fill_price = min(0.999999, vwap * lat_mult)
+        else:
+            fill_price = max(0.000001, vwap / lat_mult)
+
+        fee_usd = notional * (taker_fee_bps / 10_000.0)
+        base = max(1e-6, market.mid_price)
+        slippage_bps = abs((vwap - market.mid_price) / base) * 10_000.0
+        filled = TradeDecision(
+            market_id=decision.market_id,
+            edge=decision.edge,
+            side=decision.side,
+            size_usd=decision.size_usd,
+            limit_price=decision.limit_price,
+            kelly_fraction=decision.kelly_fraction,
+            reason=f"{decision.reason}|backtest_fill",
+            timestamp=decision.timestamp,
+            executed=True,
+            fill_price=fill_price,
+            fill_size=notional,
+        )
+        return filled, {"fee_usd": fee_usd, "slippage_bps": slippage_bps, "fill_notional_usd": notional}
 
     @staticmethod
     def _max_drawdown(equity_curve: List[float]) -> float:
@@ -223,7 +324,6 @@ class BacktestRunner:
                 decay_floor=float(decay.get("floor", 0.05)),
             )
         )
-        executor = OrderExecutor("https://clob.polymarket.com", ExecutionConfig(enabled=False, paper_mode=True))
         logger = AgentLogger(name=str(cfg.get("app", {}).get("name", "polymarket-news-agent")), sink_path=str(self._config.output_jsonl))
 
         portfolio = PortfolioState()
@@ -231,7 +331,14 @@ class BacktestRunner:
         signals = self._load_signals()
         market_snapshots = dataset.get("markets", {})
         outcomes = dataset.get("outcomes", {})
-        executed_trades: list[tuple[TradeDecision, str]] = []
+        exec_cfg = dataset.get("execution", {}) if isinstance(dataset, dict) else {}
+        taker_fee_bps = float(exec_cfg.get("taker_fee_bps", 7.0))
+        latency_bps = float(exec_cfg.get("latency_bps", 2.0))
+        executed_trades: list[tuple[TradeDecision, str, float]] = []
+        execution_attempts = 0
+        filled_count = 0
+        slippage_samples: list[float] = []
+        fees_paid = 0.0
 
         logger.info("backtest_started", {"signals": len(signals), "dataset": self._config.dataset_file, "mode": "historical_snapshot"})
         for signal in signals:
@@ -290,17 +397,32 @@ class BacktestRunner:
                 if not ok:
                     logger.info("trade_skipped", {"reason": reason, "market_id": market.condition_id})
                     continue
-                filled = await executor.execute(decision)
+                execution_attempts += 1
+                filled, fill_metrics = self._simulate_fill(
+                    decision,
+                    market,
+                    snap if isinstance(snap, dict) else {},
+                    taker_fee_bps=taker_fee_bps,
+                    latency_bps=latency_bps,
+                )
+                if filled is None:
+                    logger.info("trade_skipped", {"reason": "insufficient_depth", "market_id": market.condition_id})
+                    continue
                 risk.update_portfolio(market, filled, portfolio)
-                executed_trades.append((filled, market.condition_id))
+                filled_count += 1
+                slippage_samples.append(fill_metrics["slippage_bps"])
+                fees_paid += fill_metrics["fee_usd"]
+                executed_trades.append((filled, market.condition_id, fill_metrics["fee_usd"]))
                 logger.info(
                     "trade_executed",
                     {
                         "market_id": market.condition_id,
                         "side": filled.side.value,
-                        "size_usd": filled.size_usd,
+                        "size_usd": filled.fill_size,
                         "executed": filled.executed,
                         "paper": True,
+                        "fee_usd": fill_metrics["fee_usd"],
+                        "slippage_bps": fill_metrics["slippage_bps"],
                     },
                 )
 
@@ -308,9 +430,9 @@ class BacktestRunner:
         cumulative = 0.0
         equity_curve: list[float] = []
         per_trade_pnl: list[float] = []
-        for trade, market_id in executed_trades:
+        for trade, market_id, fee_usd in executed_trades:
             outcome = float(outcomes.get(market_id, 0.5)) if isinstance(outcomes, dict) else 0.5
-            pnl = self._trade_pnl_usd(trade, outcome)
+            pnl = self._trade_pnl_usd(trade, outcome, fee_usd=fee_usd)
             per_trade_pnl.append(pnl)
             cumulative += pnl
             equity_curve.append(cumulative)
@@ -323,9 +445,13 @@ class BacktestRunner:
                 "win_rate": (wins / len(per_trade_pnl)) if per_trade_pnl else 0.0,
                 "total_pnl_usd": cumulative,
                 "avg_edge_at_entry": (
-                    sum(t.edge for t, _ in executed_trades) / len(executed_trades) if executed_trades else 0.0
+                    sum(t.edge for t, _, _ in executed_trades) / len(executed_trades) if executed_trades else 0.0
                 ),
                 "max_drawdown_usd": self._max_drawdown(equity_curve) if equity_curve else 0.0,
+                "execution_attempts": execution_attempts,
+                "fill_rate": (filled_count / execution_attempts) if execution_attempts else 0.0,
+                "avg_slippage_bps": (sum(slippage_samples) / len(slippage_samples)) if slippage_samples else 0.0,
+                "fees_paid_usd": fees_paid,
             }
         )
         logger.info("backtest_completed", summary)

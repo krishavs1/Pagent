@@ -103,7 +103,8 @@ Dataset:
 
 Dataset schema (snapshot replay):
 - `signals`: ordered historical signals (timestamp/source/tier/type/direction/confidence)
-- `markets`: historical market snapshots (mid, bid/ask, spread, entities)
+- `markets`: historical market snapshots (mid, bid/ask, spread, entities, orderbook ladders)
+- `execution`: replay execution model knobs (`taker_fee_bps`, `latency_bps`)
 - `outcomes`: realized YES outcomes for settlement (`0` or `1`)
 
 Run:
@@ -123,9 +124,13 @@ Current sample summary:
 - sells: 9
 - settled_trades: 9
 - win_rate: 0.4444
-- total_pnl_usd: 471.67
-- max_drawdown_usd: 198.52
+- total_pnl_usd: 470.29
+- max_drawdown_usd: 198.66
 - avg_edge_at_entry: -0.3681
+- execution_attempts: 9
+- fill_rate: 1.00
+- avg_slippage_bps: 379.65
+- fees_paid_usd: 0.54
 
 ## Tests
 
@@ -140,5 +145,5 @@ Current status: all implemented tests pass in this repository.
 
 - Execution is paper-mode by default; live order posting remains intentionally guarded.
 - Market matching and source filtering are heuristic and can be further tuned.
-- Backtest PnL uses a simplified settlement approximation from notional + fill price.
-- For production-grade rigor, include historical orderbook ladders (not only top-of-book snapshots).
+- Backtest now uses historical orderbook ladders for fill simulation and applies taker fees.
+- Settlement remains a simplified binary payout model; adding pathwise intraday MTM would increase realism further.

@@ -74,7 +74,19 @@
       "best_bid_yes": 0.77,
       "best_ask_yes": 0.79,
       "bid_depth_usd": 45000,
-      "ask_depth_usd": 43000
+      "ask_depth_usd": 43000,
+      "orderbook": {
+        "bids": [
+          {"price": 0.77, "size": 600},
+          {"price": 0.76, "size": 900},
+          {"price": 0.75, "size": 1200}
+        ],
+        "asks": [
+          {"price": 0.79, "size": 500},
+          {"price": 0.80, "size": 700},
+          {"price": 0.81, "size": 1000}
+        ]
+      }
     },
     "harris_nominee_2024": {
       "question": "Will Harris become the Democratic nominee in 2024?",
@@ -88,7 +100,19 @@
       "best_bid_yes": 0.17,
       "best_ask_yes": 0.19,
       "bid_depth_usd": 30000,
-      "ask_depth_usd": 34000
+      "ask_depth_usd": 34000,
+      "orderbook": {
+        "bids": [
+          {"price": 0.17, "size": 1400},
+          {"price": 0.16, "size": 2000},
+          {"price": 0.15, "size": 3000}
+        ],
+        "asks": [
+          {"price": 0.19, "size": 1200},
+          {"price": 0.20, "size": 1800},
+          {"price": 0.21, "size": 2400}
+        ]
+      }
     },
     "dem_open_convention_2024": {
       "question": "Will Democrats enter an open convention in 2024?",
@@ -102,8 +126,24 @@
       "best_bid_yes": 0.205,
       "best_ask_yes": 0.235,
       "bid_depth_usd": 19000,
-      "ask_depth_usd": 22000
+      "ask_depth_usd": 22000,
+      "orderbook": {
+        "bids": [
+          {"price": 0.205, "size": 900},
+          {"price": 0.20, "size": 1500},
+          {"price": 0.19, "size": 2200}
+        ],
+        "asks": [
+          {"price": 0.235, "size": 700},
+          {"price": 0.24, "size": 1100},
+          {"price": 0.25, "size": 1600}
+        ]
+      }
     }
+  },
+  "execution": {
+    "taker_fee_bps": 7.0,
+    "latency_bps": 2.0
   },
   "outcomes": {
     "biden_nominee_2024": 0,

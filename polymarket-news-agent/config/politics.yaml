@@ -15,19 +15,19 @@ domain:
 
 news_sources:
   tier_1:
-    - name: "Reuters Politics"
+    - name: "NPR Politics"
       kind: rss
-      url: "https://www.reuters.com/rssFeed/politicsNews"
-    - name: "AP Politics"
+      url: "https://feeds.npr.org/1014/rss.xml"
+    - name: "NYT Politics"
       kind: rss
-      url: "https://apnews.com/hub/politics/rss"
+      url: "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"
   tier_2:
     - name: "Politico"
       kind: rss
-      url: "https://www.politico.com/rss/politics08.xml"
-    - name: "Axios Politics"
+      url: "https://rss.politico.com/congress.xml"
+    - name: "PBS Politics"
       kind: rss
-      url: "https://www.axios.com/feeds/rss/politics.xml"
+      url: "https://www.pbs.org/newshour/feeds/rss/politics"
   tier_3:
     - name: "political_x"
       type: "x_api"
@@ -55,9 +55,9 @@ news_sources:
       url: "https://example.com/pundits/rss"
 
 official_sources:
-  - name: "White House Briefing Room"
+  - name: "White House Presidential Actions"
     kind: official
-    url: "https://www.whitehouse.gov/briefing-room/feed/"
+    url: "https://www.whitehouse.gov/presidential-actions/feed/"
   - name: "Congress.gov"
     kind: official
     api: "congress"

@@ -29,9 +29,26 @@ news_sources:
       kind: rss
       url: "https://www.axios.com/feeds/rss/politics.xml"
   tier_3:
-    - name: "Selected X List"
-      kind: twitter
-      query: "(\"breaking\" OR \"scoop\" OR \"exclusive\") (election OR senate OR house)"
+    - name: "political_x"
+      type: "x_api"
+      # X API v2 pay-per-use: $0.005/post read, deduped within 24hr UTC window
+      # Uses Bearer Token auth (app-only, read public posts)
+      accounts:
+        - "kaborstv"
+        - "jakesherman"
+        - "mkraju"
+        - "axios"
+        - "PunchbowlNews"
+        - "AP"
+        - "Reuters"
+      keywords:
+        - "BREAKING"
+        - "JUST IN"
+        - "CONFIRMED"
+        - "sources tell"
+        - "expected to"
+      poll_seconds: 60           # poll once per minute to control costs
+      max_results_per_account: 5 # recent tweets per poll per account
   tier_4:
     - name: "Pundit Roundup"
       kind: rss

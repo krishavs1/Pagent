@@ -7,7 +7,16 @@ add deterministic unit tests covering:
 - boundary conditions and numerical stability
 """
 
+from src.utils.config import load_config
+
 
 def test_placeholder() -> None:
     pass
+
+
+def test_load_config_smoke() -> None:
+    cfg = load_config("config/politics.yaml")
+    assert cfg["app"]["name"] == "polymarket-news-agent"
+    assert "news_sources" in cfg
+    assert "tier_1" in cfg["news_sources"]
 

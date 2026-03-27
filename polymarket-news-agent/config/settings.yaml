@@ -54,3 +54,10 @@ ingestion:
   aggregator:
     max_queue_size: 10_000
     dedupe_window_seconds: 3600
+
+# X API cost tracking
+x_api:
+  cost_per_post_read: 0.005
+  cost_per_user_lookup: 0.01
+  daily_budget_usd: 5.0         # stop polling if daily cost exceeds this
+  dedup_window_hours: 24         # X deduplicates within this window

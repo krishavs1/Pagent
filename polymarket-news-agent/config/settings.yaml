@@ -1,0 +1,56 @@
+# Global agent configuration (placeholders).
+#
+# This file is intended to be environment-agnostic and safe to commit.
+# Secrets should live in a .env file and be injected at runtime.
+
+app:
+  name: polymarket-news-agent
+  environment: dev
+  timezone: UTC
+  log_level: INFO
+
+api:
+  polymarket:
+    clob_base_url: "https://clob.polymarket.com"
+    gamma_base_url: "https://gamma-api.polymarket.com"
+    websocket_url: "wss://ws-subscriptions.polymarket.com"
+    request_timeout_seconds: 15
+  anthropic:
+    base_url: "https://api.anthropic.com"
+    model: "claude-3-5-sonnet-latest"
+    request_timeout_seconds: 30
+
+trading:
+  enabled: false
+  min_adjusted_edge: 0.02
+  max_order_usd: 250.0
+  min_order_usd: 5.0
+  max_kelly_fraction: 0.10
+  order_type_default: limit
+  limit_price_buffer_bps: 15
+
+edge:
+  decay:
+    half_life_seconds: 1800
+    floor: 0.05
+  slippage:
+    max_allowed_usd: 20.0
+    depth_lookahead_levels: 5
+
+risk:
+  max_total_exposure_usd: 2500.0
+  max_position_per_market_usd: 400.0
+  max_daily_drawdown_usd: 300.0
+  correlation:
+    enabled: true
+    max_cluster_exposure_usd: 900.0
+
+ingestion:
+  poll_interval_seconds:
+    tier_1: 15
+    tier_2: 30
+    tier_3: 60
+    tier_4: 120
+  aggregator:
+    max_queue_size: 10_000
+    dedupe_window_seconds: 3600

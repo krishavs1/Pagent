@@ -1,0 +1,74 @@
+# Domain configuration for a "politics" deployment (placeholders).
+# This file is meant to be edited frequently as you tune sources, priors, and filters.
+
+domain:
+  name: politics
+  entity_types:
+    - PERSON
+    - ORG
+    - COUNTRY
+    - US_STATE
+    - PARTY
+    - BILL
+    - AGENCY
+    - ELECTION
+
+news_sources:
+  tier_1:
+    - name: "Reuters Politics"
+      kind: rss
+      url: "https://www.reuters.com/rssFeed/politicsNews"
+    - name: "AP Politics"
+      kind: rss
+      url: "https://apnews.com/hub/politics/rss"
+  tier_2:
+    - name: "Politico"
+      kind: rss
+      url: "https://www.politico.com/rss/politics08.xml"
+    - name: "Axios Politics"
+      kind: rss
+      url: "https://www.axios.com/feeds/rss/politics.xml"
+  tier_3:
+    - name: "Selected X List"
+      kind: twitter
+      query: "(\"breaking\" OR \"scoop\" OR \"exclusive\") (election OR senate OR house)"
+  tier_4:
+    - name: "Pundit Roundup"
+      kind: rss
+      url: "https://example.com/pundits/rss"
+
+official_sources:
+  - name: "White House Briefing Room"
+    kind: official
+    url: "https://www.whitehouse.gov/briefing-room/feed/"
+  - name: "Congress.gov"
+    kind: official
+    api: "congress"
+    bill_updates: true
+
+signal_priors:
+  # Prior probability that a signal is "actionable" for edge, by signal type.
+  OFFICIAL_OUTCOME: 0.80
+  CREDIBLE_SCOOP: 0.55
+  INSIDER_LEAK: 0.35
+  POLL_SHIFT: 0.45
+  PUNDIT_SPECULATION: 0.10
+
+market_filters:
+  include_tags:
+    - "Politics"
+    - "Elections"
+    - "US"
+  exclude_tags:
+    - "Crypto"
+    - "Sports"
+  question_keywords_allowlist:
+    - "election"
+    - "nominee"
+    - "primary"
+    - "approval"
+    - "senate"
+    - "house"
+    - "supreme court"
+  min_volume_24h: 10_000
+  min_liquidity: 2_000

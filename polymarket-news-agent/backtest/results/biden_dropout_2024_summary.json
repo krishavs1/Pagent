@@ -1,0 +1,13 @@
+{
+  "total_trades": 9,
+  "buys": 0,
+  "sells": 9,
+  "total_exposure": 773.617254255927,
+  "realized_pnl": 0.0,
+  "unrealized_pnl": 0.0,
+  "settled_trades": 9,
+  "win_rate": 0.4444444444444444,
+  "total_pnl_usd": 471.66828101493246,
+  "avg_edge_at_entry": -0.3681206968088483,
+  "max_drawdown_usd": 198.5245201176225
+}

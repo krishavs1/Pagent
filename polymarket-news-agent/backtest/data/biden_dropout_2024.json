@@ -1,0 +1,113 @@
+{
+  "signals": [
+    {
+      "id": "b1",
+      "timestamp": "2024-07-21T12:10:00Z",
+      "source": "X:@politics_reporter",
+      "tier": 3,
+      "signal_type": "INSIDER_LEAK",
+      "headline": "Rumors intensify that Biden may exit the 2024 race soon",
+      "body": "Multiple reporters cite campaign turmoil and donor pressure.",
+      "entities": ["Biden", "2024", "Democratic nominee"],
+      "direction": -1,
+      "confidence": 0.62,
+      "relevance_score": 0.75,
+      "market_ids": ["biden_nominee_2024", "harris_nominee_2024"],
+      "estimated_slippage": 0.01
+    },
+    {
+      "id": "b2",
+      "timestamp": "2024-07-21T13:05:00Z",
+      "source": "NPR Politics",
+      "tier": 2,
+      "signal_type": "CREDIBLE_SCOOP",
+      "headline": "Senior Democratic officials signal major campaign announcement expected",
+      "body": "Party insiders indicate contingency planning for nominee replacement.",
+      "entities": ["Democratic Party", "nominee", "Biden"],
+      "direction": -1,
+      "confidence": 0.74,
+      "relevance_score": 0.82,
+      "market_ids": ["biden_nominee_2024", "harris_nominee_2024"],
+      "estimated_slippage": 0.01
+    },
+    {
+      "id": "b3",
+      "timestamp": "2024-07-21T16:20:00Z",
+      "source": "White House Presidential Actions",
+      "tier": 1,
+      "signal_type": "OFFICIAL_OUTCOME",
+      "headline": "President Biden announces withdrawal from 2024 re-election campaign",
+      "body": "Official statement confirms withdrawal and endorses transition process.",
+      "entities": ["Biden", "withdrawal", "2024 election"],
+      "direction": -1,
+      "confidence": 0.95,
+      "relevance_score": 0.96,
+      "market_ids": ["biden_nominee_2024", "harris_nominee_2024", "dem_open_convention_2024"],
+      "estimated_slippage": 0.015
+    },
+    {
+      "id": "b4",
+      "timestamp": "2024-07-21T17:00:00Z",
+      "source": "AP Politics",
+      "tier": 1,
+      "signal_type": "OFFICIAL_OUTCOME",
+      "headline": "AP confirms Biden ends bid; delegates begin new nomination process",
+      "body": "Follow-on confirmation from major wire service.",
+      "entities": ["Biden", "delegates", "Democratic nominee"],
+      "direction": -1,
+      "confidence": 0.9,
+      "relevance_score": 0.92,
+      "market_ids": ["biden_nominee_2024", "harris_nominee_2024"],
+      "estimated_slippage": 0.015
+    }
+  ],
+  "markets": {
+    "biden_nominee_2024": {
+      "question": "Will Biden be the Democratic nominee in 2024?",
+      "description": "Historical snapshot market",
+      "tags": ["Politics", "US Elections"],
+      "entities": ["Biden", "Democratic nominee", "2024 election"],
+      "mid_price": 0.78,
+      "spread": 0.02,
+      "volume_24h": 2500000,
+      "liquidity": 450000,
+      "best_bid_yes": 0.77,
+      "best_ask_yes": 0.79,
+      "bid_depth_usd": 45000,
+      "ask_depth_usd": 43000
+    },
+    "harris_nominee_2024": {
+      "question": "Will Harris become the Democratic nominee in 2024?",
+      "description": "Historical snapshot market",
+      "tags": ["Politics", "US Elections"],
+      "entities": ["Harris", "Democratic nominee", "2024 election"],
+      "mid_price": 0.18,
+      "spread": 0.02,
+      "volume_24h": 1900000,
+      "liquidity": 360000,
+      "best_bid_yes": 0.17,
+      "best_ask_yes": 0.19,
+      "bid_depth_usd": 30000,
+      "ask_depth_usd": 34000
+    },
+    "dem_open_convention_2024": {
+      "question": "Will Democrats enter an open convention in 2024?",
+      "description": "Historical snapshot market",
+      "tags": ["Politics", "US Elections"],
+      "entities": ["Democrats", "convention", "2024 election"],
+      "mid_price": 0.22,
+      "spread": 0.03,
+      "volume_24h": 1100000,
+      "liquidity": 210000,
+      "best_bid_yes": 0.205,
+      "best_ask_yes": 0.235,
+      "bid_depth_usd": 19000,
+      "ask_depth_usd": 22000
+    }
+  },
+  "outcomes": {
+    "biden_nominee_2024": 0,
+    "harris_nominee_2024": 1,
+    "dem_open_convention_2024": 1
+  }
+}

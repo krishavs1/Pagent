@@ -74,6 +74,21 @@ def test_strategy_respects_market_position_cap() -> None:
     assert d is None
 
 
+def test_strategy_skips_sell_without_long() -> None:
+    s = TradingStrategy(StrategyConfig(min_adjusted_edge=0.01))
+    d = s.decide(_market(), _edge(-0.10, posterior=0.2), PortfolioState())
+    assert d is None
+
+
+def test_strategy_sell_reduces_long_only() -> None:
+    s = TradingStrategy(StrategyConfig(min_adjusted_edge=0.01, bankroll_usd=1000))
+    p = PortfolioState(positions={"m1": 50.0}, total_exposure=50.0)
+    d = s.decide(_market(), _edge(-0.10, posterior=0.2), p)
+    assert d is not None
+    assert d.side.value == "SELL"
+    assert d.size_usd <= 50
+
+
 @pytest.mark.asyncio
 async def test_executor_paper_mode_marks_executed() -> None:
     s = TradingStrategy(StrategyConfig(min_adjusted_edge=0.01))

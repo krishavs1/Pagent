@@ -55,6 +55,25 @@ def test_drawdown_rejects() -> None:
     assert not ok and reason == "drawdown_guard"
 
 
+def test_sell_at_total_exposure_cap_reduces_approved() -> None:
+    r = RiskManager(RiskConfig(max_total_exposure_usd=1000))
+    m = _market("a", ["biden"])
+    sell = TradeDecision(
+        market_id="a",
+        edge=-0.1,
+        side=OrderSide.SELL,
+        size_usd=1000.0,
+        limit_price=0.5,
+        kelly_fraction=0.1,
+        reason="test",
+        timestamp=datetime.now(timezone.utc),
+        executed=False,
+    )
+    p = PortfolioState(positions={"a": 1000.0}, total_exposure=1000.0)
+    ok, reason = r.approve(m, sell, p)
+    assert ok and reason == "ok"
+
+
 def test_cluster_cap() -> None:
     r = RiskManager(RiskConfig(max_cluster_exposure_usd=150, enable_correlation_checks=True))
     p = PortfolioState(positions={"m2": 100.0}, total_exposure=100.0)

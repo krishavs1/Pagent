@@ -1,4 +1,12 @@
-"""Rigorous backtest runner using historical snapshot replay."""
+"""
+Historical snapshot replay with time-varying books and mark-to-market equity.
+
+For each signal timestamp, per-market snapshots are resolved from optional
+`markets.<id>.timeline[]` (latest row with `timestamp <= signal time`; falls back to
+the earliest row if the signal is before the first tick). Fills use the resolved
+`orderbook` ladders plus fees/latency. After each signal, equity is
+`cash + sum(shares_yes * mid)` using timeline mids (signed shares: shorts are negative).
+"""
 
 from __future__ import annotations
 
@@ -33,6 +41,7 @@ class BacktestConfig:
     settings_path: str = "config/settings.yaml"
     output_jsonl: Path = Path("backtest/results/biden_dropout_2024.jsonl")
     output_summary: Path = Path("backtest/results/biden_dropout_2024_summary.json")
+    output_equity: Path = Path("backtest/results/biden_dropout_2024_equity_curve.json")
     start_timestamp: Optional[float] = None
     end_timestamp: Optional[float] = None
 
@@ -121,6 +130,54 @@ class BacktestRunner:
             }
         raise ValueError("Unsupported dataset format.")
 
+    def _resolve_market_snapshot_at(self, raw: dict[str, Any], at: datetime) -> dict[str, Any]:
+        """
+        Merge static market fields with the latest timeline snapshot at or before `at`.
+
+        If `timeline` is absent, returns `raw` unchanged. If all timeline timestamps are
+        after `at`, uses the earliest timeline row (warm-up / pre-event book).
+        """
+        if not isinstance(raw, dict):
+            return {}
+        merged = dict(raw)
+        tl = merged.get("timeline")
+        if not isinstance(tl, list) or not tl:
+            return merged
+        entries: list[tuple[datetime, dict[str, Any]]] = []
+        for item in tl:
+            if not isinstance(item, dict):
+                continue
+            ts_raw = item.get("timestamp")
+            if ts_raw is None:
+                continue
+            entries.append((self._parse_timestamp(str(ts_raw)), item))
+        entries.sort(key=lambda x: x[0])
+        chosen: Optional[dict[str, Any]] = None
+        for ts, item in entries:
+            if ts <= at:
+                chosen = item
+            else:
+                break
+        if chosen is None and entries:
+            chosen = entries[0][1]
+        if chosen is None:
+            return merged
+        for key in (
+            "mid_price",
+            "spread",
+            "best_bid_yes",
+            "best_ask_yes",
+            "bid_depth_usd",
+            "ask_depth_usd",
+            "volume_24h",
+            "liquidity",
+        ):
+            if key in chosen:
+                merged[key] = chosen[key]
+        if "orderbook" in chosen:
+            merged["orderbook"] = chosen["orderbook"]
+        return merged
+
     @staticmethod
     def _market_from_snapshot(market_id: str, m: dict[str, Any], now: datetime) -> MarketState:
         return MarketState(
@@ -138,7 +195,7 @@ class BacktestRunner:
             bid_depth_usd=float(m.get("bid_depth_usd", 0.0)),
             ask_depth_usd=float(m.get("ask_depth_usd", 0.0)),
             last_updated=now,
-            yes_token_id=None,
+            yes_token_id=str(m["yes_token_id"]) if m.get("yes_token_id") else None,
         )
 
     @staticmethod
@@ -247,7 +304,8 @@ class BacktestRunner:
             fill_price = max(0.000001, vwap / lat_mult)
 
         fee_usd = notional * (taker_fee_bps / 10_000.0)
-        base = max(1e-6, market.mid_price)
+        # Floor mid so bps do not explode when probability is near 0 (reporting metric only).
+        base = max(0.01, float(market.mid_price))
         slippage_bps = abs((vwap - market.mid_price) / base) * 10_000.0
         filled = TradeDecision(
             market_id=decision.market_id,
@@ -272,6 +330,57 @@ class BacktestRunner:
             peak = max(peak, x)
             max_dd = max(max_dd, peak - x)
         return max_dd
+
+    @staticmethod
+    def _time_under_water_events(equities: List[float]) -> int:
+        """Count of steps after the first where equity is strictly below the running peak."""
+        if len(equities) < 2:
+            return 0
+        peak = equities[0]
+        under = 0
+        for x in equities[1:]:
+            peak = max(peak, x)
+            if x < peak - 1e-12:
+                under += 1
+        return under
+
+    @staticmethod
+    def _apply_fill_to_cash_shares(
+        cash: float,
+        shares: Dict[str, float],
+        trade: TradeDecision,
+    ) -> tuple[float, Dict[str, float]]:
+        """Update cash and YES-share inventory from a simulated fill (notional = fill_size)."""
+        if trade.fill_price is None or trade.fill_size is None:
+            return cash, shares
+        n = float(trade.fill_size)
+        p = max(1e-9, min(1.0 - 1e-9, float(trade.fill_price)))
+        mid = trade.market_id
+        if trade.side == OrderSide.BUY:
+            cash -= n
+            shares[mid] = shares.get(mid, 0.0) + n / p
+        else:
+            cash += n
+            shares[mid] = shares.get(mid, 0.0) - n / p
+        return cash, shares
+
+    def _equity_mtm(
+        self,
+        cash: float,
+        shares: Dict[str, float],
+        at: datetime,
+        market_snapshots: dict[str, Any],
+    ) -> tuple[float, float]:
+        """Return (equity_usd, position_value_usd) using YES shares * mid at `at`."""
+        pos_val = 0.0
+        for mid, sh in shares.items():
+            if abs(sh) < 1e-12:
+                continue
+            raw = market_snapshots.get(mid, {})
+            snap = self._resolve_market_snapshot_at(raw if isinstance(raw, dict) else {}, at)
+            m = float(snap.get("mid_price", 0.5))
+            pos_val += sh * m
+        return cash + pos_val, pos_val
 
     @staticmethod
     def _summary(portfolio: PortfolioState) -> dict[str, Any]:
@@ -334,6 +443,10 @@ class BacktestRunner:
         exec_cfg = dataset.get("execution", {}) if isinstance(dataset, dict) else {}
         taker_fee_bps = float(exec_cfg.get("taker_fee_bps", 7.0))
         latency_bps = float(exec_cfg.get("latency_bps", 2.0))
+        bankroll_start = float(trading.get("bankroll_usd", 1000.0))
+        cash_usd = bankroll_start
+        shares_yes: dict[str, float] = {}
+        equity_points: list[dict[str, Any]] = []
         executed_trades: list[tuple[TradeDecision, str, float]] = []
         execution_attempts = 0
         filled_count = 0
@@ -366,8 +479,9 @@ class BacktestRunner:
             ly, ln = likelihoods_from_classification(cr)
 
             for market_id in event_markets[:3]:
-                snap = market_snapshots.get(market_id, {}) if isinstance(market_snapshots, dict) else {}
-                market = self._market_from_snapshot(str(market_id), snap if isinstance(snap, dict) else {}, signal.timestamp)
+                snap_raw = market_snapshots.get(market_id, {}) if isinstance(market_snapshots, dict) else {}
+                snap = self._resolve_market_snapshot_at(snap_raw if isinstance(snap_raw, dict) else {}, signal.timestamp)
+                market = self._market_from_snapshot(str(market_id), snap, signal.timestamp)
                 bayes.seed_prior_if_missing(market.condition_id, market.mid_price)
                 prior = bayes.get_prior(market.condition_id)
                 posterior = bayes.update_from_likelihoods(market.condition_id, ly, ln)
@@ -385,6 +499,7 @@ class BacktestRunner:
                     "edge_calculated",
                     {
                         "market_id": market.condition_id,
+                        "prior": edge.prior,
                         "adjusted_edge": edge.adjusted_edge,
                         "posterior": posterior,
                     },
@@ -401,7 +516,7 @@ class BacktestRunner:
                 filled, fill_metrics = self._simulate_fill(
                     decision,
                     market,
-                    snap if isinstance(snap, dict) else {},
+                    snap,
                     taker_fee_bps=taker_fee_bps,
                     latency_bps=latency_bps,
                 )
@@ -409,6 +524,8 @@ class BacktestRunner:
                     logger.info("trade_skipped", {"reason": "insufficient_depth", "market_id": market.condition_id})
                     continue
                 risk.update_portfolio(market, filled, portfolio)
+                cash_usd, shares_yes = self._apply_fill_to_cash_shares(cash_usd, shares_yes, filled)
+                cash_usd -= float(fill_metrics["fee_usd"])
                 filled_count += 1
                 slippage_samples.append(fill_metrics["slippage_bps"])
                 fees_paid += fill_metrics["fee_usd"]
@@ -426,6 +543,21 @@ class BacktestRunner:
                     },
                 )
 
+            eq_mtm, pos_val = self._equity_mtm(cash_usd, shares_yes, signal.timestamp, market_snapshots)
+            unrealized = eq_mtm - cash_usd
+            equity_points.append(
+                {
+                    "timestamp": signal.timestamp.isoformat().replace("+00:00", "Z"),
+                    "unix_ts": signal.timestamp.timestamp(),
+                    "signal_id": signal.id,
+                    "equity_usd": eq_mtm,
+                    "cash_usd": cash_usd,
+                    "position_value_usd": pos_val,
+                    "unrealized_mtm_usd": unrealized,
+                    "shares_yes": {k: round(v, 8) for k, v in shares_yes.items() if abs(v) > 1e-12},
+                }
+            )
+
         # Settlement and rigorous metrics.
         cumulative = 0.0
         equity_curve: list[float] = []
@@ -439,6 +571,7 @@ class BacktestRunner:
 
         wins = sum(1 for p in per_trade_pnl if p > 0)
         summary = self._summary(portfolio)
+        mtm_series = [float(p["equity_usd"]) for p in equity_points]
         summary.update(
             {
                 "settled_trades": len(per_trade_pnl),
@@ -452,12 +585,28 @@ class BacktestRunner:
                 "fill_rate": (filled_count / execution_attempts) if execution_attempts else 0.0,
                 "avg_slippage_bps": (sum(slippage_samples) / len(slippage_samples)) if slippage_samples else 0.0,
                 "fees_paid_usd": fees_paid,
+                "bankroll_start_usd": bankroll_start,
+                "terminal_equity_mtm_usd": mtm_series[-1] if mtm_series else bankroll_start,
+                "max_drawdown_mtm_usd": self._max_drawdown(mtm_series) if mtm_series else 0.0,
+                "time_under_water_signal_events": self._time_under_water_events(mtm_series) if len(mtm_series) > 1 else 0,
             }
         )
         logger.info("backtest_completed", summary)
         logger.close()
 
         self._config.output_summary.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        equity_payload = {
+            "dataset": self._config.dataset_file,
+            "bankroll_start_usd": bankroll_start,
+            "points": equity_points,
+            "metrics": {
+                "max_drawdown_mtm_usd": summary["max_drawdown_mtm_usd"],
+                "time_under_water_signal_events": summary["time_under_water_signal_events"],
+                "terminal_equity_mtm_usd": summary["terminal_equity_mtm_usd"],
+            },
+        }
+        self._config.output_equity.parent.mkdir(parents=True, exist_ok=True)
+        self._config.output_equity.write_text(json.dumps(equity_payload, indent=2), encoding="utf-8")
         return portfolio
 
 
@@ -469,6 +618,7 @@ async def _cli_async(args: argparse.Namespace) -> None:
         settings_path=args.settings,
         output_jsonl=Path(args.output_jsonl),
         output_summary=Path(args.output_summary),
+        output_equity=Path(args.output_equity),
     )
     runner = BacktestRunner(cfg)
     await runner.run()
@@ -478,11 +628,12 @@ def _cli() -> None:
     load_dotenv()
     parser = argparse.ArgumentParser(description="Replay historical backtest signals.")
     parser.add_argument("--data-dir", default="backtest/data")
-    parser.add_argument("--dataset", default="biden_dropout_2024.json")
+    parser.add_argument("--dataset", default="biden_withdrawal_2024_historical.json")
     parser.add_argument("--config", default="config/politics.yaml")
     parser.add_argument("--settings", default="config/settings.yaml")
-    parser.add_argument("--output-jsonl", default="backtest/results/biden_dropout_2024.jsonl")
-    parser.add_argument("--output-summary", default="backtest/results/biden_dropout_2024_summary.json")
+    parser.add_argument("--output-jsonl", default="backtest/results/biden_withdrawal_2024_historical.jsonl")
+    parser.add_argument("--output-summary", default="backtest/results/biden_withdrawal_2024_historical_summary.json")
+    parser.add_argument("--output-equity", default="backtest/results/biden_withdrawal_2024_historical_equity_curve.json")
     args = parser.parse_args()
     asyncio.run(_cli_async(args))
 

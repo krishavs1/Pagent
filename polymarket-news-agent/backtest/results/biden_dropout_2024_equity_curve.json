@@ -1,0 +1,71 @@
+{
+  "dataset": "biden_dropout_2024.json",
+  "bankroll_start_usd": 1000.0,
+  "points": [
+    {
+      "timestamp": "2024-07-21T12:00:00Z",
+      "unix_ts": 1721563200.0,
+      "signal_id": "b0",
+      "equity_usd": 996.738097675239,
+      "cash_usd": 991.1598939929329,
+      "position_value_usd": 5.578203682306133,
+      "unrealized_mtm_usd": 5.578203682306139,
+      "shares_yes": {
+        "harris_nominee_2024": 46.48503069
+      }
+    },
+    {
+      "timestamp": "2024-07-21T12:10:00Z",
+      "unix_ts": 1721563800.0,
+      "signal_id": "b1",
+      "equity_usd": 971.9410047404168,
+      "cash_usd": 923.9571060532344,
+      "position_value_usd": 47.98389868718245,
+      "unrealized_mtm_usd": 47.98389868718243,
+      "shares_yes": {
+        "harris_nominee_2024": 399.86582239
+      }
+    },
+    {
+      "timestamp": "2024-07-21T13:05:00Z",
+      "unix_ts": 1721567100.0,
+      "signal_id": "b2",
+      "equity_usd": 989.5048141615812,
+      "cash_usd": 999.8936144183817,
+      "position_value_usd": -10.388800256800518,
+      "unrealized_mtm_usd": -10.38880025680055,
+      "shares_yes": {
+        "harris_nominee_2024": -47.22181935
+      }
+    },
+    {
+      "timestamp": "2024-07-21T16:20:00Z",
+      "unix_ts": 1721578800.0,
+      "signal_id": "b3",
+      "equity_usd": 964.9494681000527,
+      "cash_usd": 999.8936144183817,
+      "position_value_usd": -34.94414631832902,
+      "unrealized_mtm_usd": -34.94414631832899,
+      "shares_yes": {
+        "harris_nominee_2024": -47.22181935
+      }
+    },
+    {
+      "timestamp": "2024-07-21T17:00:00Z",
+      "unix_ts": 1721581200.0,
+      "signal_id": "b4",
+      "equity_usd": 956.9217588107068,
+      "cash_usd": 999.8936144183817,
+      "position_value_usd": -42.971855607674875,
+      "unrealized_mtm_usd": -42.97185560767491,
+      "shares_yes": {
+        "harris_nominee_2024": -47.22181935
+      }
+    }
+  ],
+  "metrics": {
+    "max_drawdown_mtm_usd": 39.81633886453221,
+    "time_under_water_signal_events": 4,
+    "terminal_equity_mtm_usd": 956.9217588107068
+  }
+}

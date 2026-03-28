@@ -57,6 +57,12 @@ class TradingStrategy:
             return None
 
         side = OrderSide.BUY if edge.adjusted_edge > 0 else OrderSide.SELL
+        signed_pos = self._current_position_usd(market.condition_id, portfolio)
+
+        # Do not open or add to a short YES: SELL only trims an existing long.
+        if side == OrderSide.SELL and signed_pos <= 0:
+            return None
+
         kelly_fraction = self._compute_kelly_fraction(edge.posterior)
         if kelly_fraction <= 0:
             return None
@@ -64,13 +70,20 @@ class TradingStrategy:
         target_size = self._config.bankroll_usd * kelly_fraction
         size_usd = self._clamp(target_size, self._config.min_order_usd, self._config.max_order_usd)
 
-        # Position and portfolio caps.
-        current_pos = abs(self._current_position_usd(market.condition_id, portfolio))
-        if current_pos >= self._config.per_market_position_limit_usd:
+        if side == OrderSide.SELL:
+            size_usd = min(size_usd, signed_pos)
+            if size_usd < self._config.min_order_usd:
+                return None
+
+        if side == OrderSide.BUY and signed_pos >= self._config.per_market_position_limit_usd:
             return None
-        remaining_market = self._config.per_market_position_limit_usd - current_pos
-        remaining_portfolio = self._config.max_portfolio_exposure_usd - max(0.0, portfolio.total_exposure)
-        size_usd = min(size_usd, max(0.0, remaining_market), max(0.0, remaining_portfolio))
+
+        if side == OrderSide.BUY:
+            remaining_market = self._config.per_market_position_limit_usd - max(0.0, signed_pos)
+            size_usd = min(size_usd, max(0.0, remaining_market))
+            remaining_portfolio = self._config.max_portfolio_exposure_usd - max(0.0, portfolio.total_exposure)
+            size_usd = min(size_usd, max(0.0, remaining_portfolio))
+
         if size_usd < self._config.min_order_usd:
             return None
 

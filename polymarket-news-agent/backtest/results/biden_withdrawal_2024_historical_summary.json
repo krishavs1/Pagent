@@ -1,0 +1,21 @@
+{
+  "total_trades": 1,
+  "buys": 1,
+  "sells": 0,
+  "total_exposure": 99.99339188180444,
+  "realized_pnl": 0.0,
+  "unrealized_pnl": 0.0,
+  "settled_trades": 1,
+  "win_rate": 0.0,
+  "total_pnl_usd": -100.0633872561217,
+  "avg_edge_at_entry": 0.01653304059097788,
+  "max_drawdown_usd": 0.0,
+  "execution_attempts": 1,
+  "fill_rate": 1.0,
+  "avg_slippage_bps": 261500.00000000003,
+  "fees_paid_usd": 0.0699953743172631,
+  "bankroll_start_usd": 1000.0,
+  "terminal_equity_mtm_usd": 901.2570161031548,
+  "max_drawdown_mtm_usd": 98.7429838968452,
+  "time_under_water_signal_events": 1
+}

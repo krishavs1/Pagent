@@ -1,0 +1,339 @@
+{
+  "provenance": {
+    "description": "Real Polymarket CLOB prices-history for YES on 'Will Joe Biden win the 2024 Democratic Presidential Nomination' (token from Gamma slug will-joe-biden-win-the-2024-democratic-presidential-nomination). News times are approximate UTC for major public beats around July 20\u201321, 2024. Order book ladders are synthetic (not historical L2).",
+    "gamma_slug": "will-joe-biden-win-the-2024-democratic-presidential-nomination",
+    "condition_id": "0x653483009043f1663360bc35ed8fb542d3f9453916082d20ff025adaa2fe7032",
+    "yes_token_id": "29771515314065403331935508893946579645282141892225585852084723308418208825505",
+    "clob_prices_history": "https://clob.polymarket.com/prices-history"
+  },
+  "signals": [
+    {
+      "id": "h0",
+      "timestamp": "2024-07-20T22:30:00Z",
+      "source": "CNN (reporting)",
+      "tier": 2,
+      "signal_type": "CREDIBLE_SCOOP",
+      "headline": "Biden meets campaign advisors July 20 as path to nomination questioned",
+      "body": "Cable reporting that Biden met senior advisors; party pressure had intensified after the June debate.",
+      "entities": [
+        "Biden",
+        "Democratic nomination",
+        "2024"
+      ],
+      "direction": -1,
+      "confidence": 0.55,
+      "relevance_score": 0.72,
+      "market_ids": [
+        "biden_dnom_2024"
+      ],
+      "estimated_slippage": 0.02
+    },
+    {
+      "id": "h1",
+      "timestamp": "2024-07-21T13:00:00Z",
+      "source": "Press reports",
+      "tier": 3,
+      "signal_type": "CREDIBLE_SCOOP",
+      "headline": "Major outlets report Democratic leaders preparing for possible nominee change",
+      "body": "Morning July 21 UTC: widespread reporting of party coordination ahead of a potential announcement.",
+      "entities": [
+        "Democratic Party",
+        "nomination",
+        "2024"
+      ],
+      "direction": -1,
+      "confidence": 0.58,
+      "relevance_score": 0.68,
+      "market_ids": [
+        "biden_dnom_2024"
+      ],
+      "estimated_slippage": 0.02
+    },
+    {
+      "id": "h2",
+      "timestamp": "2024-07-21T17:50:00Z",
+      "source": "White House / public letter",
+      "tier": 1,
+      "signal_type": "OFFICIAL_OUTCOME",
+      "headline": "Biden releases letter withdrawing from 2024 presidential candidacy",
+      "body": "Public letter states intention to stand down from the re-election race; endorses process to select the nominee.",
+      "entities": [
+        "Biden",
+        "withdrawal",
+        "2024 election"
+      ],
+      "direction": -1,
+      "confidence": 0.96,
+      "relevance_score": 0.95,
+      "market_ids": [
+        "biden_dnom_2024"
+      ],
+      "estimated_slippage": 0.02
+    },
+    {
+      "id": "h3",
+      "timestamp": "2024-07-21T18:45:00Z",
+      "source": "AP / wires",
+      "tier": 1,
+      "signal_type": "OFFICIAL_OUTCOME",
+      "headline": "Wire services confirm Biden ends bid; focus shifts to successor",
+      "body": "Follow-on confirmation across major wires and broadcast networks.",
+      "entities": [
+        "Biden",
+        "Democratic nominee",
+        "2024"
+      ],
+      "direction": -1,
+      "confidence": 0.9,
+      "relevance_score": 0.9,
+      "market_ids": [
+        "biden_dnom_2024"
+      ],
+      "estimated_slippage": 0.02
+    }
+  ],
+  "markets": {
+    "biden_dnom_2024": {
+      "question": "Will Joe Biden win the 2024 Democratic Presidential Nomination?",
+      "description": "Historical: Gamma market; YES token prices from CLOB. Synthetic depth ladders.",
+      "tags": [
+        "Politics",
+        "US Elections",
+        "2024"
+      ],
+      "entities": [
+        "Biden",
+        "Democratic nomination"
+      ],
+      "yes_token_id": "29771515314065403331935508893946579645282141892225585852084723308418208825505",
+      "condition_id": "0x653483009043f1663360bc35ed8fb542d3f9453916082d20ff025adaa2fe7032",
+      "mid_price": 0.255,
+      "spread": 0.02,
+      "volume_24h": 0.0,
+      "liquidity": 0.0,
+      "best_bid_yes": 0.245,
+      "best_ask_yes": 0.265,
+      "bid_depth_usd": 40000.0,
+      "ask_depth_usd": 40000.0,
+      "orderbook": {
+        "bids": [
+          {
+            "price": 0.245,
+            "size": 800
+          },
+          {
+            "price": 0.235,
+            "size": 1200
+          },
+          {
+            "price": 0.225,
+            "size": 1600
+          }
+        ],
+        "asks": [
+          {
+            "price": 0.265,
+            "size": 800
+          },
+          {
+            "price": 0.275,
+            "size": 1200
+          },
+          {
+            "price": 0.285,
+            "size": 1600
+          }
+        ]
+      },
+      "timeline": [
+        {
+          "timestamp": "2024-07-20T00:00:01Z",
+          "mid_price": 0.255,
+          "best_bid_yes": 0.245,
+          "best_ask_yes": 0.265
+        },
+        {
+          "timestamp": "2024-07-20T02:30:01Z",
+          "mid_price": 0.275,
+          "best_bid_yes": 0.265,
+          "best_ask_yes": 0.285
+        },
+        {
+          "timestamp": "2024-07-20T05:00:01Z",
+          "mid_price": 0.295,
+          "best_bid_yes": 0.285,
+          "best_ask_yes": 0.305
+        },
+        {
+          "timestamp": "2024-07-20T07:30:01Z",
+          "mid_price": 0.265,
+          "best_bid_yes": 0.255,
+          "best_ask_yes": 0.275
+        },
+        {
+          "timestamp": "2024-07-20T10:00:01Z",
+          "mid_price": 0.245,
+          "best_bid_yes": 0.235,
+          "best_ask_yes": 0.255
+        },
+        {
+          "timestamp": "2024-07-20T12:30:01Z",
+          "mid_price": 0.23,
+          "best_bid_yes": 0.22,
+          "best_ask_yes": 0.24
+        },
+        {
+          "timestamp": "2024-07-20T15:00:01Z",
+          "mid_price": 0.255,
+          "best_bid_yes": 0.245,
+          "best_ask_yes": 0.265
+        },
+        {
+          "timestamp": "2024-07-20T17:30:01Z",
+          "mid_price": 0.265,
+          "best_bid_yes": 0.255,
+          "best_ask_yes": 0.275
+        },
+        {
+          "timestamp": "2024-07-20T20:00:01Z",
+          "mid_price": 0.285,
+          "best_bid_yes": 0.275,
+          "best_ask_yes": 0.295
+        },
+        {
+          "timestamp": "2024-07-20T22:30:01Z",
+          "mid_price": 0.285,
+          "best_bid_yes": 0.275,
+          "best_ask_yes": 0.295
+        },
+        {
+          "timestamp": "2024-07-21T01:00:01Z",
+          "mid_price": 0.3,
+          "best_bid_yes": 0.29,
+          "best_ask_yes": 0.31
+        },
+        {
+          "timestamp": "2024-07-21T03:30:01Z",
+          "mid_price": 0.315,
+          "best_bid_yes": 0.305,
+          "best_ask_yes": 0.325
+        },
+        {
+          "timestamp": "2024-07-21T06:00:01Z",
+          "mid_price": 0.315,
+          "best_bid_yes": 0.305,
+          "best_ask_yes": 0.325
+        },
+        {
+          "timestamp": "2024-07-21T08:30:01Z",
+          "mid_price": 0.315,
+          "best_bid_yes": 0.305,
+          "best_ask_yes": 0.325
+        },
+        {
+          "timestamp": "2024-07-21T11:00:01Z",
+          "mid_price": 0.305,
+          "best_bid_yes": 0.295,
+          "best_ask_yes": 0.315
+        },
+        {
+          "timestamp": "2024-07-21T13:30:01Z",
+          "mid_price": 0.305,
+          "best_bid_yes": 0.295,
+          "best_ask_yes": 0.315
+        },
+        {
+          "timestamp": "2024-07-21T16:00:01Z",
+          "mid_price": 0.295,
+          "best_bid_yes": 0.285,
+          "best_ask_yes": 0.305
+        },
+        {
+          "timestamp": "2024-07-21T18:40:01Z",
+          "mid_price": 0.0035,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0135
+        },
+        {
+          "timestamp": "2024-07-21T21:10:01Z",
+          "mid_price": 0.0005,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0105
+        },
+        {
+          "timestamp": "2024-07-21T23:40:01Z",
+          "mid_price": 0.0005,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0105
+        },
+        {
+          "timestamp": "2024-07-22T02:10:01Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        },
+        {
+          "timestamp": "2024-07-22T04:40:01Z",
+          "mid_price": 0.0025,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0125
+        },
+        {
+          "timestamp": "2024-07-22T07:10:01Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        },
+        {
+          "timestamp": "2024-07-22T09:40:01Z",
+          "mid_price": 0.0025,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0125
+        },
+        {
+          "timestamp": "2024-07-22T12:10:02Z",
+          "mid_price": 0.002,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.012
+        },
+        {
+          "timestamp": "2024-07-22T14:40:01Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        },
+        {
+          "timestamp": "2024-07-22T17:10:02Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        },
+        {
+          "timestamp": "2024-07-22T19:40:01Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        },
+        {
+          "timestamp": "2024-07-22T22:10:01Z",
+          "mid_price": 0.001,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.011
+        },
+        {
+          "timestamp": "2024-07-22T23:50:01Z",
+          "mid_price": 0.0015,
+          "best_bid_yes": 0.0,
+          "best_ask_yes": 0.0115
+        }
+      ]
+    }
+  },
+  "execution": {
+    "taker_fee_bps": 7.0,
+    "latency_bps": 2.0
+  },
+  "outcomes": {
+    "biden_dnom_2024": 0
+  }
+}

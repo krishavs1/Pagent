@@ -69,15 +69,22 @@ class RiskManager:
         if portfolio.unrealized_pnl <= -self._config.max_daily_drawdown_usd:
             return False, "drawdown_guard"
 
-        new_exposure = portfolio.total_exposure + decision.size_usd
+        if decision.side.value == "BUY":
+            new_exposure = portfolio.total_exposure + decision.size_usd
+        else:
+            new_exposure = max(0.0, portfolio.total_exposure - decision.size_usd)
         if new_exposure > self._config.max_total_exposure_usd + 1e-6:
             return False, "max_total_exposure"
 
         cur = self._position_usd(portfolio, market.condition_id)
-        if cur + decision.size_usd > self._config.max_position_per_market_usd + 1e-6:
-            return False, "max_position_per_market"
+        if decision.side.value == "BUY":
+            if cur + decision.size_usd > self._config.max_position_per_market_usd + 1e-6:
+                return False, "max_position_per_market"
+        else:
+            if decision.size_usd > cur + 1e-6:
+                return False, "max_position_per_market"
 
-        if self._config.enable_correlation_checks:
+        if self._config.enable_correlation_checks and decision.side.value == "BUY":
             cluster = self._cluster_exposure(market, portfolio)
             if cluster + decision.size_usd > self._config.max_cluster_exposure_usd + 1e-6:
                 return False, "max_cluster_exposure"

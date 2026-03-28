@@ -7,8 +7,6 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from anthropic import Anthropic
-
 from src.utils.types import Signal, SignalType
 
 
@@ -88,6 +86,8 @@ class SignalClassifier:
 
     def _request_classification(self, signal: Signal) -> dict[str, Any]:
         """Request structured classification from Anthropic."""
+        from anthropic import Anthropic
+
         api_key = os.getenv(self._anthropic_api_key_env)
         if not api_key:
             raise ValueError(f"{self._anthropic_api_key_env} is not set.")

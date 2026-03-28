@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "polymarket-news-agent",
+  "scripts": {
+    "dev": "npm run dev --prefix web",
+    "build": "npm run build --prefix web",
+    "lint": "npm run lint --prefix web"
+  }
+}
